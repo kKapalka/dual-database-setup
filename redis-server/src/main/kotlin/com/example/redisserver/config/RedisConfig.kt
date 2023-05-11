@@ -27,6 +27,7 @@ class RedisConfig : CachingConfigurerSupport() {
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
         val lettuceConnectionFactory = LettuceConnectionFactory(redisHost, redisPort)
+        lettuceConnectionFactory.clientName = "my-custom-redis-server"
         lettuceConnectionFactory.database = redisDatabase
         return lettuceConnectionFactory
     }
@@ -42,4 +43,5 @@ class RedisConfig : CachingConfigurerSupport() {
         redisTemplate.afterPropertiesSet()
         return redisTemplate
     }
+
 }

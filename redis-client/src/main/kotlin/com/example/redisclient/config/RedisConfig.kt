@@ -1,18 +1,28 @@
 package com.example.redisclient.config
 
+import com.example.redisclient.logic.RedisCacheEvictionSubscriber
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.CachingConfigurerSupport
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.data.redis.cache.RedisCacheConfiguration
+import org.springframework.data.redis.cache.RedisCacheManager
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.listener.ChannelTopic
+import org.springframework.data.redis.listener.RedisMessageListenerContainer
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.GenericToStringSerializer
+import org.springframework.data.redis.serializer.RedisSerializationContext
 import org.springframework.data.redis.serializer.StringRedisSerializer
 
 
 @Configuration
+@EnableCaching
 class RedisConfig : CachingConfigurerSupport() {
 
     @Value("\${spring.data.redis.host}")
@@ -27,6 +37,7 @@ class RedisConfig : CachingConfigurerSupport() {
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
         val lettuceConnectionFactory = LettuceConnectionFactory(redisHost, redisPort)
+        lettuceConnectionFactory.clientName = "my-custom-redis-client"
         lettuceConnectionFactory.database = redisDatabase
         return lettuceConnectionFactory
     }
@@ -42,4 +53,32 @@ class RedisConfig : CachingConfigurerSupport() {
         redisTemplate.afterPropertiesSet()
         return redisTemplate
     }
+
+    @Bean
+    fun messageListenerAdapter(subscriber: RedisCacheEvictionSubscriber): MessageListenerAdapter {
+        return MessageListenerAdapter(subscriber)
+    }
+
+    @Bean
+    fun redisMessageListenerContainer(listenerAdapter: MessageListenerAdapter): RedisMessageListenerContainer {
+        val container = RedisMessageListenerContainer()
+        container.setConnectionFactory(redisConnectionFactory())
+        container.addMessageListener(listenerAdapter, ChannelTopic("cache-eviction-channel"))
+        return container
+    }
+
+    @Bean
+    fun cacheManager(redisConnectionFactory: RedisConnectionFactory): CacheManager {
+        val redisCacheConfiguration =
+            RedisCacheConfiguration.defaultCacheConfig()
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(
+                        GenericJackson2JsonRedisSerializer()
+                    )
+                )
+        return RedisCacheManager.builder(redisConnectionFactory)
+            .cacheDefaults(redisCacheConfiguration)
+            .build()
+    }
+
 }
