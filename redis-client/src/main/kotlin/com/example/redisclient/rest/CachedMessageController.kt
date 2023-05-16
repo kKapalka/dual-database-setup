@@ -2,7 +2,6 @@ package com.example.redisclient.rest
 
 import com.example.redisclient.data.entity.MessageEntity
 import com.example.redisclient.data.repository.MessageRepository
-import com.example.redisclient.redis.data.repository.CachedUserRepository
 import com.example.redisclient.redis.data.service.CachedUserService
 import org.hibernate.service.spi.ServiceException
 import org.springframework.beans.factory.annotation.Autowired

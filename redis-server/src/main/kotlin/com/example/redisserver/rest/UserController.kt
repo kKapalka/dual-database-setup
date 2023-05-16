@@ -7,6 +7,8 @@ import com.example.redisserver.redis.data.repository.CachedUserRepository
 import org.hibernate.service.spi.ServiceException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.transaction.annotation.Isolation
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -14,26 +16,19 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
+import kotlin.concurrent.thread
 
 @RestController
 class UserController(
     @Autowired private val userRepository: UserRepository,
-    @Autowired private val cachedUserRepository: CachedUserRepository,
-    @Autowired private val redisTemplate: RedisTemplate<String, Any>
+    @Autowired private val userService: UserService
 ) {
 
     @PostMapping("/user")
     fun createUser(
         @RequestBody request: UserRequest
     ): UserEntity {
-        return userRepository.save(UserEntity(
-            name = request.name
-        )).also {
-            cachedUserRepository.save(CachedUserEntity(
-                id = it.id,
-                name = it.name
-            ))
-        }
+        return userService.save(request.name)
     }
 
     @PutMapping("/user/{id}")
@@ -41,20 +36,7 @@ class UserController(
         @PathVariable id: Long,
         @RequestBody request: UserRequest
     ): UserEntity {
-        val user = userRepository.findById(id).orElseThrow {
-            ServiceException("User doesn't exist!")
-        }
-        return userRepository.save(
-            user.apply {
-                this.name = request.name
-            }
-        ).also {
-            cachedUserRepository.save(CachedUserEntity(
-                id = it.id,
-                name = it.name
-            ))
-            redisTemplate.convertAndSend("cache-eviction-channel", "redisEntityCache::$id")
-        }
+        return userService.update(id, request.name)
     }
 
     @GetMapping("/user/{id}")

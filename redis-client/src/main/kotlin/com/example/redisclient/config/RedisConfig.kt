@@ -1,6 +1,5 @@
 package com.example.redisclient.config
 
-import com.example.redisclient.logic.RedisCacheEvictionSubscriber
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.CachingConfigurerSupport
@@ -22,7 +21,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 
 
 @Configuration
-@EnableCaching
 class RedisConfig : CachingConfigurerSupport() {
 
     @Value("\${spring.data.redis.host}")
@@ -52,33 +50,6 @@ class RedisConfig : CachingConfigurerSupport() {
         redisTemplate.hashValueSerializer = GenericToStringSerializer(Any::class.java)
         redisTemplate.afterPropertiesSet()
         return redisTemplate
-    }
-
-    @Bean
-    fun messageListenerAdapter(subscriber: RedisCacheEvictionSubscriber): MessageListenerAdapter {
-        return MessageListenerAdapter(subscriber)
-    }
-
-    @Bean
-    fun redisMessageListenerContainer(listenerAdapter: MessageListenerAdapter): RedisMessageListenerContainer {
-        val container = RedisMessageListenerContainer()
-        container.setConnectionFactory(redisConnectionFactory())
-        container.addMessageListener(listenerAdapter, ChannelTopic("cache-eviction-channel"))
-        return container
-    }
-
-    @Bean
-    fun cacheManager(redisConnectionFactory: RedisConnectionFactory): CacheManager {
-        val redisCacheConfiguration =
-            RedisCacheConfiguration.defaultCacheConfig()
-                .serializeValuesWith(
-                    RedisSerializationContext.SerializationPair.fromSerializer(
-                        GenericJackson2JsonRedisSerializer()
-                    )
-                )
-        return RedisCacheManager.builder(redisConnectionFactory)
-            .cacheDefaults(redisCacheConfiguration)
-            .build()
     }
 
 }
