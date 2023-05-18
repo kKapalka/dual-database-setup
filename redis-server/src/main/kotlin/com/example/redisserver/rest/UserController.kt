@@ -38,6 +38,11 @@ class UserController(
     ): UserResponse {
         return userService.get(id)
     }
+
+    @GetMapping("/user")
+    fun getUsers(): List<UserResponse> {
+        return userService.get()
+    }
 }
 
 

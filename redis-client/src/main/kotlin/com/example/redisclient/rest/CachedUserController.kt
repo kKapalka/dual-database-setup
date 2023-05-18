@@ -16,4 +16,9 @@ class CachedUserController(
     ): UserResponse {
         return userService.getUser(id)
     }
+
+    @GetMapping("/user")
+    fun getUsers(): List<UserResponse> {
+        return userService.getUsers()
+    }
 }
