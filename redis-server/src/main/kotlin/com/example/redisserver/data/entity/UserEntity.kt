@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.example.UserResponse
+import java.io.Serializable
 
 @Entity
 @Table(name = "users")
@@ -17,4 +19,11 @@ class UserEntity (
 
     @Column(name = "name")
     var name: String = ""
-)
+) {
+    fun toResponse() : UserResponse {
+        return UserResponse(
+            id = this.id,
+            name = this.name
+        )
+    }
+}
