@@ -16,9 +16,22 @@ class CachedUserController(
     ): UserResponse {
         return userService.getUser(id)
     }
+    @GetMapping("/{orgId}/user/{id}")
+    fun getUser(
+        @PathVariable orgId: Long,
+        @PathVariable id: Long,
+    ): UserResponse {
+        return userService.getUserByIdAndOrgId(orgId, id)
+    }
 
     @GetMapping("/user")
     fun getUsers(): List<UserResponse> {
         return userService.getUsers()
+    }
+
+    @GetMapping("/{orgId}/user")
+    fun getUsersByOrgId(
+        @PathVariable orgId: Long): List<UserResponse> {
+        return userService.getUsersByOrgId(orgId)
     }
 }

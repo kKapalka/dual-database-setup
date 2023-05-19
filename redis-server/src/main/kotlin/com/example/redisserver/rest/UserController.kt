@@ -19,9 +19,9 @@ class UserController(
 
     @PostMapping("/user")
     fun createUser(
-        @RequestBody request: UserRequest
+        @RequestBody request: UserRequest,
     ): UserResponse {
-        return userService.save(request.name)
+        return userService.save(request.name, request.orgId)
     }
 
     @PutMapping("/user/{id}")
@@ -29,14 +29,7 @@ class UserController(
         @PathVariable id: Long,
         @RequestBody request: UserRequest
     ): UserResponse {
-        return userService.update(id, request.name)
-    }
-
-    @GetMapping("/user/{id}")
-    fun getUser(
-        @PathVariable id: Long,
-    ): UserResponse {
-        return userService.get(id)
+        return userService.update(id, request.name, request.orgId)
     }
 
     @GetMapping("/user")
@@ -47,5 +40,6 @@ class UserController(
 
 
 data class UserRequest(
+    val orgId: Long,
     val name: String
 )

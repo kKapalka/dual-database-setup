@@ -20,41 +20,36 @@ class UserService(
 ) {
 
     @Transactional
-    @CachePut(value=["users"], key="#result.id")
-    fun save(name: String): UserResponse {
+    @CachePut(value=[UserResponse.cacheName], key="T(org.example.UserResponse).Companion.setKey(#result)", unless="#result == null")
+    fun save(name: String, orgId: Long): UserResponse {
         return userRepository.save(
             UserEntity(
-            name = name
+                name = name,
+                organizationId = orgId
         )).toResponse()
     }
 
-    @CachePut(value=["users"], key="#id", unless="#result == null")
-    fun update(id: Long, name: String) : UserResponse {
+    @Transactional
+    @CachePut(value=[UserResponse.cacheName], key="T(org.example.UserResponse).Companion.setKey(#result)", unless="#result == null")
+    fun update(id: Long, name: String, orgId: Long) : UserResponse {
         val user = userRepository.findById(id).orElseThrow {
             ServiceException("User doesn't exist!")
         }
         return userRepository.save(
             user.apply {
                 this.name = name
+                this.organizationId = orgId
             }
         ).toResponse()
     }
 
-    @Cacheable(value= ["users"], key="#id")
-    fun get(id: Long): UserResponse {
-        val user = userRepository.findById(id).orElseThrow {
-            ServiceException("User doesn't exist!")
-        }
-        return user.toResponse()
-    }
-
     fun get(): List<UserResponse> {
-        val usersCache = cacheManager.getCache("users")
+        val usersCache = cacheManager.getCache(UserResponse.cacheName)
             ?: throw IllegalStateException("Cannot find cache users")
         usersCache.invalidate()
         return userRepository.findAll().map {
             val resp = it.toResponse()
-            usersCache.put(resp.id, resp)
+            usersCache.put(UserResponse.setKey(resp), resp)
             resp
         }.sortedBy { it.id }
     }
