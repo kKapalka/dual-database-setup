@@ -4,9 +4,10 @@ import java.io.Serializable
 class UserResponse(
     var id: Long,
     var orgId: Long,
-    var name: String
+    var name: String,
+    val otherParam: String
 ): Serializable {
-    constructor() : this(0, 0, "") {
+    constructor() : this(0, 0, "", "") {
 
     }
     companion object {

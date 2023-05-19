@@ -10,12 +10,6 @@ import org.springframework.web.bind.annotation.RestController
 class CachedUserController(
     @Autowired private val userService: CachedUserService
 ) {
-    @GetMapping("/user/{id}")
-    fun getUser(
-        @PathVariable id: Long,
-    ): UserResponse {
-        return userService.getUser(id)
-    }
     @GetMapping("/{orgId}/user/{id}")
     fun getUser(
         @PathVariable orgId: Long,

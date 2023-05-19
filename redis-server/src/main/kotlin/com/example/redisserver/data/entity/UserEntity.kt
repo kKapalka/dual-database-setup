@@ -27,7 +27,8 @@ class UserEntity (
         return UserResponse(
             id = this.id,
             orgId = this.organizationId,
-            name = this.name
+            name = this.name,
+            otherParam = ""
         )
     }
 }
